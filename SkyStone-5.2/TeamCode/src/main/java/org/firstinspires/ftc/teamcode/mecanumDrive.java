@@ -278,6 +278,64 @@ class MecanumDrive {
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
+    public void driveByEncoder(double distant, double angle, double speed){
+        Motion motion = new Motion(Math.abs(speed), Math.toRadians(angle), 0);
+
+        Wheels wheelsPowers = motionToWheels(motion);
+        int ticks = (int)(distant / Math.cos(Math.PI/4) * COUNTS_PER_CM);
+
+        int newFrontLeftTarget =  frontLeftDrive.getCurrentPosition() + (int)(ticks * wheelsPowers.getFrontLeft());
+        int newFrontRightTarget = frontRightDrive.getCurrentPosition() + (int)(ticks * wheelsPowers.getFrontRight());
+        int newBackLeftTarget = backLeftDrive.getCurrentPosition() + (int)(ticks * wheelsPowers.getBackLeft());
+        int newBackRightTarget = backRightDrive.getCurrentPosition() + (int)(ticks * wheelsPowers.getBackRight());
+
+        opMode.telemetry.addData("front left target: " , ticks + ", " + newFrontLeftTarget);
+        opMode.telemetry.addData("front right target: " , ticks + ", " + newFrontRightTarget);
+        opMode.telemetry.addData("rear left target: " , ticks + ", " + newBackLeftTarget);
+        opMode.telemetry.addData("rear right target: " , ticks + ", " + newBackRightTarget);
+        opMode.telemetry.update();
+
+        frontLeftDrive.setTargetPosition(newFrontLeftTarget);
+        frontRightDrive.setTargetPosition(newFrontRightTarget);
+        backLeftDrive.setTargetPosition(newBackLeftTarget);
+        backRightDrive.setTargetPosition(newBackRightTarget);
+
+        // Turn On RUN_TO_POSITION
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // start motion.
+        frontLeftDrive.setPower(-Math.abs(wheelsPowers.getFrontLeft()));
+        frontRightDrive.setPower(-Math.abs(wheelsPowers.getFrontRight()));
+        backLeftDrive.setPower(-Math.abs(wheelsPowers.getBackLeft()));
+        backRightDrive.setPower(-Math.abs(wheelsPowers.getBackRight()));
+
+        while (((LinearOpMode)opMode).opModeIsActive() &&
+                (frontLeftDrive.isBusy() || frontRightDrive.isBusy() || backLeftDrive.isBusy() || backRightDrive.isBusy()) ){
+            opMode.telemetry.addData("front left: " ,newFrontLeftTarget + " , " + frontLeftDrive.getCurrentPosition());
+            opMode.telemetry.addData("front right: " ,newFrontRightTarget + " , " + frontRightDrive.getCurrentPosition());
+            opMode.telemetry.addData("rear left: " ,newBackLeftTarget + " , " + backLeftDrive.getCurrentPosition());
+            opMode.telemetry.addData("rear right: " ,newBackRightTarget + " , " + backRightDrive.getCurrentPosition());
+            opMode.telemetry.update();
+        }
+
+
+        // Stop all motion;
+        frontLeftDrive.setPower(0);
+        frontRightDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        backRightDrive.setPower(0);
+
+        // Turn off RUN_TO_POSITION
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+    }
+
     public void turnByGyroAbsolut(double targetDegree, double timeS) {
         turnPID.reset(targetDegree, gyro.getAngle());
         timeS += opMode.getRuntime();
