@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-class MecanumDrive {
+class MecanumDrive extends SubSystem {
 
     public MecanumDrive(){}
 
@@ -139,7 +139,6 @@ class MecanumDrive {
     private TurnPIDController turnPID = null;
 
 
-    private OpMode opMode;
 
     //TODO: check the numbers
     private static final double COUNTS_PER_MOTOR_REV = 28 ;
@@ -182,7 +181,7 @@ class MecanumDrive {
         gyro.init(hardwareMap);
     }
 
-    public void teleopMotion(Gamepad driver){
+    public void teleopMotion(Gamepad driver, Gamepad operator){
         Motion motion = joystickToMotion(driver, gyro.getAngle());
         Wheels wheels = motionToWheels(motion);
 
